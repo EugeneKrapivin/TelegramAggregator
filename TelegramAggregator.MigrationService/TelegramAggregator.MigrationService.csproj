@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TelegramAggregator.MigrationService</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TelegramAggregator.Common.Data\TelegramAggregator.Common.Data.csproj" />
+    <ProjectReference Include="..\TelegramAggregator.ServiceDefaults\TelegramAggregator.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
