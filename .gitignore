@@ -406,6 +406,9 @@ MigrationBackup/
 # Git worktrees
 .worktrees/
 
+# Claude Code local config (machine-specific, may contain secrets)
+.claude/
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
