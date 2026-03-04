@@ -17,8 +17,6 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // Use Scalar for OpenAPI UI instead of Swagger
-    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

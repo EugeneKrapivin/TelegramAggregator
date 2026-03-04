@@ -9,9 +9,9 @@ A distributed Telegram news aggregator built with .NET 10 and Aspire. Monitors m
   - Text normalization and hashing
   - Image checksums (SHA256)
   - Perceptual image hashing with Hamming distance matching
-- **AI-Powered Summaries** - Uses Semantic Kernel with configurable LLM providers:
-  - Azure OpenAI (primary)
-  - OpenAI (fallback)
+- **AI-Powered Summaries** - Uses Semantic Kernel with Azure OpenAI for:
+  - Headline generation (≤10 words)
+  - Digest creation (≤150 words)
 - **RESTful API** - Minimal API with Scalar documentation for:
   - Channel management (CRUD operations)
   - Enable/disable channels dynamically
@@ -106,7 +106,6 @@ When running via Aspire dashboard, you'll be prompted to enter:
 - `telegram-user-phone-number` - Your account number
 - `azure-openai-endpoint` - Azure OpenAI service URL
 - `azure-openai-api-key` - Azure OpenAI API key
-- `openai-api-key` - OpenAI API key (fallback)
 
 ### 4. Run with Aspire
 

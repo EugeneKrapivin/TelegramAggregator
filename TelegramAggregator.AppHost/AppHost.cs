@@ -1,3 +1,5 @@
+using Scalar.Aspire;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add external parameters for secrets
@@ -16,19 +18,25 @@ var azureOpenAiEndpoint = builder
 var azureOpenAiApiKey = builder
     .AddParameter("azure-openai-api-key", secret: true)
     .WithDescription("API key for Azure OpenAI service");
-var openAiApiKey = builder
-    .AddParameter("openai-api-key", secret: true)
-    .WithDescription("API key for OpenAI service (fallback provider)");
 
 // Add API project
-builder.AddProject<Projects.TelegramAggregator_Api>("api");
+var api = builder.AddProject<Projects.TelegramAggregator_Api>("api");
 
 builder.AddProject<Projects.TelegramAggregator>("telegramaggregator")
     .WithEnvironment("Telegram__BotToken", telegramBotToken)
     .WithEnvironment("Telegram__ApiHash", telegramApiHash)
     .WithEnvironment("Telegram__UserPhoneNumber", telegramUserPhoneNumber)
     .WithEnvironment("SemanticKernel__AzureOpenAI__Endpoint", azureOpenAiEndpoint)
-    .WithEnvironment("SemanticKernel__AzureOpenAI__ApiKey", azureOpenAiApiKey)
-    .WithEnvironment("SemanticKernel__OpenAI__ApiKey", openAiApiKey);
+    .WithEnvironment("SemanticKernel__AzureOpenAI__ApiKey", azureOpenAiApiKey);
 
-builder.Build().Run();
+var scalar = builder.AddScalarApiReference();
+scalar.WithApiReference(api, options =>
+{
+    options
+       .AddDocument("v1", "Telegram Aggregator API")
+       .WithOpenApiRoutePattern("/api-documentation/{documentName}.json")
+       .WithTheme(ScalarTheme.Mars);
+});
+
+builder.Build()
+    .Run();
