@@ -26,6 +26,7 @@ builder.AddNpgsqlDbContext<AppDbContext>("postgres");
 // Configuration
 builder.Services
     .Configure<WorkerOptions>(builder.Configuration.GetSection("Worker"));
+builder.Services.Configure<TelegramOptions>(builder.Configuration.GetSection("Telegram"));
 
 // Register core services
 builder.Services.AddSingleton<IImageService, ImageService>();
