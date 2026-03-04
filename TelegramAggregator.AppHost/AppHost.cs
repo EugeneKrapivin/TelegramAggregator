@@ -6,6 +6,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 var telegramBotToken = builder
     .AddParameter("telegram-bot-token", secret: true)
     .WithDescription("Telegram bot token obtained from @BotFather");
+var telegramApiId = builder
+    .AddParameter("telegram-api-id", secret: true)
+    .WithDescription("Telegram API ID from https://my.telegram.org/apps");
 var telegramApiHash = builder
     .AddParameter("telegram-api-hash", secret: true)
     .WithDescription("Telegram API hash for user client authentication");
@@ -24,6 +27,7 @@ var api = builder.AddProject<Projects.TelegramAggregator_Api>("api");
 
 builder.AddProject<Projects.TelegramAggregator>("telegramaggregator")
     .WithEnvironment("Telegram__BotToken", telegramBotToken)
+    .WithEnvironment("Telegram__ApiId", telegramApiId)
     .WithEnvironment("Telegram__ApiHash", telegramApiHash)
     .WithEnvironment("Telegram__UserPhoneNumber", telegramUserPhoneNumber)
     .WithEnvironment("SemanticKernel__AzureOpenAI__Endpoint", azureOpenAiEndpoint)

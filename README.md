@@ -102,7 +102,8 @@ docker-compose up -d postgres
 
 When running via Aspire dashboard, you'll be prompted to enter:
 - `telegram-bot-token` - From @BotFather
-- `telegram-api-hash` - From Telegram API Console
+- `telegram-api-id` - From https://my.telegram.org/apps
+- `telegram-api-hash` - From https://my.telegram.org/apps
 - `telegram-user-phone-number` - Your account number
 - `azure-openai-endpoint` - Azure OpenAI service URL
 - `azure-openai-api-key` - Azure OpenAI API key
