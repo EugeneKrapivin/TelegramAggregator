@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>TelegramAggregator.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
