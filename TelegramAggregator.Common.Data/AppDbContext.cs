@@ -55,7 +55,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.ChecksumSha256).IsUnique();
             entity.HasIndex(e => e.PerceptualHash);
             entity.HasIndex(e => e.UsedAt);
-            entity.Property(e => e.ContentBase64).HasColumnType("text");
+            entity.Property(e => e.Content).HasColumnType("bytea");
             entity.Property(e => e.ChecksumSha256).HasMaxLength(64);
             entity.Property(e => e.TelegramFileId).HasMaxLength(256);
         });

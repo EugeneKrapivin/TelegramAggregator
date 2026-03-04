@@ -38,7 +38,7 @@ scalar.WithApiReference(api, options =>
 {
     options
        .AddDocument("v1", "Telegram Aggregator API")
-       .WithOpenApiRoutePattern("/api-documentation/{documentName}.json")
+       .WithOpenApiRoutePattern("/openapi/{documentName}.json")
        .WithTheme(ScalarTheme.Mars);
 });
 

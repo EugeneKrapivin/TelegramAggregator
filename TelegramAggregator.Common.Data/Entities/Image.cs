@@ -9,7 +9,7 @@ public class Image
     public int Width { get; set; }
     public int Height { get; set; }
     public long SizeBytes { get; set; }
-    public string? ContentBase64 { get; set; }
+    public byte[]? Content { get; set; }
     public string? TelegramFileId { get; set; }
     public DateTime AddedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UsedAt { get; set; }

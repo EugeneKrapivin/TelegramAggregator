@@ -61,7 +61,13 @@ await app.RunAsync();
 async Task<IResult> GetChannels(AppDbContext db)
 {
     var channels = await db.Channels
-        .Select(c => new ChannelDto(c.Id, c.TelegramChannelId, c.Username, c.Title, c.IsActive, c.AddedAt))
+        .Select(c => new ChannelDto(
+            c.Id,
+            c.TelegramChannelId,
+            c.Username,
+            c.Title,
+            c.IsActive,
+            c.AddedAt))
         .ToListAsync();
     return Results.Ok(channels);
 }
@@ -72,7 +78,12 @@ async Task<IResult> GetChannelById(long id, AppDbContext db)
     if (channel == null)
         return Results.NotFound();
 
-    return Results.Ok(new ChannelDto(channel.Id, channel.TelegramChannelId, channel.Username, channel.Title, channel.IsActive, channel.AddedAt));
+    return Results.Ok(new ChannelDto(channel.Id,
+        channel.TelegramChannelId,
+        channel.Username,
+        channel.Title,
+        channel.IsActive,
+        channel.AddedAt));
 }
 
 async Task<IResult> CreateChannel(CreateChannelRequest request, AppDbContext db)

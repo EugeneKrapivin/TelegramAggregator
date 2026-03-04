@@ -7,4 +7,6 @@ public interface IImageService
     Task<ulong> ComputePerceptualHashAsync(byte[] imageBytes, CancellationToken cancellationToken = default);
     int ComputeHammingDistance(ulong hash1, ulong hash2);
     Task<Guid> FindOrCreateImageAsync(byte[] bytes, string mimeType, int width, int height, CancellationToken cancellationToken = default);
+    Task ClearContentAsync(Guid imageId, CancellationToken cancellationToken = default);
+    Task ClearContentBatchAsync(IEnumerable<Guid> imageIds, CancellationToken cancellationToken = default);
 }
