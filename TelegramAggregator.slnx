@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Project Path="TelegramAggregator.AppHost/TelegramAggregator.AppHost.csproj" Id="f63517f8-1ffd-48bd-a1cd-91cb0684d126" />
+  <Project Path="TelegramAggregator.Common.Data/TelegramAggregator.Common.Data.csproj" />
+  <Project Path="TelegramAggregator.ServiceDefaults/TelegramAggregator.ServiceDefaults.csproj" />
+  <Project Path="TelegramAggregator.Tests/TelegramAggregator.Tests.csproj" />
+  <Project Path="TelegramAggregator/TelegramAggregator.csproj" />
+</Solution>

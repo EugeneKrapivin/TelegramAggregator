@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TelegramAggregator": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

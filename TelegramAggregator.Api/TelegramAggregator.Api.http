@@ -1,0 +1,6 @@
+@TelegramAggregator.Api_HostAddress = http://localhost:5068
+
+GET {{TelegramAggregator.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
