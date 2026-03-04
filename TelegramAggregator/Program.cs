@@ -41,10 +41,12 @@ builder.Services.AddSingleton<ITelegramPublisher, TelegramPublisher>();
 builder.Services.AddSingleton<ISemanticSummarizer, SemanticKernelSummarizer>();
 builder.Services.AddSingleton<INormalizerService, NormalizerService>();
 builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
+builder.Services.AddSingleton<WTelegramClientAdapter>();
 
 // Register background workers
 builder.Services.AddHostedService<SummaryBackgroundService>();
 builder.Services.AddHostedService<ImageCleanupBackgroundService>();
+builder.Services.AddHostedService<IngestionBackgroundService>();
 
 var app = builder.Build();
 
