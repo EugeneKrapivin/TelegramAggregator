@@ -10,13 +10,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="Telegram.Bot" />
     <PackageReference Include="WTelegramClient" />
@@ -25,10 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\TelegramAggregator.ServiceDefaults\TelegramAggregator.ServiceDefaults.csproj" />
     <ProjectReference Include="..\TelegramAggregator.Common.Data\TelegramAggregator.Common.Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Contracts\" />
   </ItemGroup>
 
 </Project>

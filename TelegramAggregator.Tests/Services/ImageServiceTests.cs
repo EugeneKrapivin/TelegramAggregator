@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using TelegramAggregator.Data;
-using TelegramAggregator.Data.Entities;
+
+using TelegramAggregator.Common.Data;
 using TelegramAggregator.Services;
+
 using Xunit;
 
 namespace TelegramAggregator.Tests.Services;
@@ -12,7 +14,7 @@ namespace TelegramAggregator.Tests.Services;
 /// Unit tests for ImageService.
 /// Tests image download, SHA256 hash computation, and deduplication logic.
 /// </summary>
-public class ImageServiceTests
+public class ImageServiceTests : IDisposable
 {
     private readonly Mock<ILogger<ImageService>> _mockLogger;
     private readonly AppDbContext _dbContext;

@@ -1,7 +1,7 @@
-using TelegramAggregator.Data;
 using TelegramAggregator.Common.Data.Entities;
 using TelegramAggregator.Common.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
+using TelegramAggregator.Common.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +23,7 @@ app.UseHttpsRedirection();
 
 // Channel Management Endpoints
 var channelsGroup = app.MapGroup("/api/channels")
-    .WithTags("Channels")
-    .WithOpenApi();
+    .WithTags("Channels");
 
 // GET /api/channels - Get all channels
 channelsGroup.MapGet("/", GetChannels)

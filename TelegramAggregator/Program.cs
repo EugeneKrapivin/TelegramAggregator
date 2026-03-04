@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using TelegramAggregator.Background;
 using TelegramAggregator.Config;
 using TelegramAggregator.Services;
 using TelegramAggregator.AI;
-using TelegramAggregator.Data;
+using TelegramAggregator.Common.Data;
 
 var builder = Host.CreateApplicationBuilder(args);
 

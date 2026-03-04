@@ -1,11 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TelegramAggregator.Data;
-using TelegramAggregator.Data.Entities;
+
+using TelegramAggregator.Common.Data;
 using TelegramAggregator.Services;
+
 using Xunit;
 
 namespace TelegramAggregator.Tests.Services;
@@ -14,7 +17,7 @@ namespace TelegramAggregator.Tests.Services;
 /// Unit tests for perceptual hash functionality in ImageService.
 /// Tests pHash computation and Hamming distance calculation.
 /// </summary>
-public class ImageServicePerceptualHashTests
+public class ImageServicePerceptualHashTests : IDisposable
 {
     private readonly Mock<ILogger<ImageService>> _mockLogger;
     private readonly AppDbContext _dbContext;

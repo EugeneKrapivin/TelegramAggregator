@@ -11,6 +11,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
     <!-- Aspire & Data -->
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.1.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
     <!-- Logging & Extensions -->
@@ -24,7 +25,6 @@
     <PackageVersion Include="Scalar.Aspire" Version="0.9.0" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
     <!-- Telegram -->
-    <PackageVersion Include="Scalar.AspNetCore" Version="1.2.2" />
     <PackageVersion Include="Telegram.Bot" Version="22.9.5.2" />
     <PackageVersion Include="WTelegramClient" Version="4.4.1" />
     <!-- Observability & Telemetry -->

@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+
 using TelegramAggregator.Common.Data.Entities;
 
-namespace TelegramAggregator.Data;
+namespace TelegramAggregator.Common.Data;
 
 public class AppDbContext : DbContext
 {

@@ -1,12 +1,13 @@
 using System.Security.Cryptography;
-using System.Text;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
+
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
-using TelegramAggregator.Data;
-using TelegramAggregator.Data.Entities;
+
+using TelegramAggregator.Common.Data;
+using TelegramAggregator.Common.Data.Entities;
 
 namespace TelegramAggregator.Services;
 
@@ -45,18 +46,6 @@ public class ImageService : IImageService
     {
         var hashedBytes = SHA256.HashData(bytes);
         return Convert.ToHexString(hashedBytes);
-    }
-
-    public async Task<string> ComputeSha256HashAsync(byte[] bytes, CancellationToken cancellationToken = default)
-    {
-        return await Task.Run(() =>
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(bytes);
-                return Convert.ToHexString(hashedBytes);
-            }
-        }, cancellationToken);
     }
 
     /// <summary>
@@ -166,7 +155,7 @@ public class ImageService : IImageService
             // Step 3: Image not found, create new record
             _logger.LogInformation("Creating new image record: {MimeType}, {Width}x{Height}", mimeType, width, height);
 
-            var newImage = new Data.Entities.Image
+            var newImage = new Image
             {
                 Id = Guid.NewGuid(),
                 ChecksumSha256 = checksumSha256,

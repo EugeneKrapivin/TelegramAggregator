@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
-using TelegramAggregator.Data;
+
+using TelegramAggregator.Common.Data;
 
 namespace TelegramAggregator.Services;
 
