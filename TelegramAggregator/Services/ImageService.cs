@@ -2,12 +2,14 @@ using System.Security.Cryptography;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
+using TelegramAggregator.Config;
 
 namespace TelegramAggregator.Services;
 
@@ -16,12 +18,14 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService> _logger;
     private readonly HttpClient _httpClient;
     private readonly AppDbContext _dbContext;
+    private readonly int _pHashThreshold;
 
-    public ImageService(ILogger<ImageService> logger, AppDbContext dbContext)
+    public ImageService(ILogger<ImageService> logger, AppDbContext dbContext, IOptions<WorkerOptions> workerOptions)
     {
         _logger = logger;
         _httpClient = new HttpClient();
         _dbContext = dbContext;
+        _pHashThreshold = workerOptions.Value.PHashHammingThreshold;
     }
 
     public async Task<byte[]> DownloadImageAsync(string url, CancellationToken cancellationToken = default)
@@ -152,18 +156,47 @@ public class ImageService : IImageService
                 return existingImage.Id;
             }
 
-            // Step 3: Image not found, create new record
+            // Step 3: pHash check — compute and scan existing images
+            string? pHashHex = default;
+            try
+            {
+                var pHash = await ComputePerceptualHashAsync(bytes, cancellationToken);
+                pHashHex = pHash.ToString("X16");
+
+                var candidates = await _dbContext.Images
+                    .Where(i => i.PerceptualHash != null)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var candidate in candidates)
+                {
+                    var candidateHash = Convert.ToUInt64(candidate.PerceptualHash, 16);
+                    if (ComputeHammingDistance(pHash, candidateHash) <= _pHashThreshold)
+                    {
+                        _logger.LogInformation("pHash duplicate found: {ImageId} (Hamming ≤ {Threshold})", candidate.Id, _pHashThreshold);
+                        candidate.UsedAt = DateTime.UtcNow;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        return candidate.Id;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "pHash computation skipped — bytes are not a decodable image");
+            }
+
+            // Step 4: No duplicate — create new record
             _logger.LogInformation("Creating new image record: {MimeType}, {Width}x{Height}", mimeType, width, height);
 
             var newImage = new Image
             {
                 Id = Guid.NewGuid(),
                 ChecksumSha256 = checksumSha256,
+                PerceptualHash = pHashHex,
                 MimeType = mimeType,
                 Width = width,
                 Height = height,
                 SizeBytes = bytes.Length,
-                ContentBase64 = Convert.ToBase64String(bytes),
+                Content = bytes,
                 AddedAt = DateTime.UtcNow,
                 UsedAt = DateTime.UtcNow
             };
@@ -179,5 +212,35 @@ public class ImageService : IImageService
             _logger.LogError(ex, "Failed to find or create image record");
             throw;
         }
+    }
+
+    public async Task ClearContentAsync(Guid imageId, CancellationToken cancellationToken = default)
+    {
+        var image = await _dbContext.Images.FindAsync([imageId], cancellationToken);
+        if (image is null)
+        {
+            _logger.LogWarning("Image {ImageId} not found for content clearing", imageId);
+            return;
+        }
+
+        image.Content = null;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Cleared content for image {ImageId}", imageId);
+    }
+
+    public async Task ClearContentBatchAsync(IEnumerable<Guid> imageIds, CancellationToken cancellationToken = default)
+    {
+        var ids = imageIds.ToList();
+        var images = await _dbContext.Images
+            .Where(i => ids.Contains(i.Id) && i.Content != null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var image in images)
+        {
+            image.Content = null;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Cleared content for {Count} images", images.Count);
     }
 }
