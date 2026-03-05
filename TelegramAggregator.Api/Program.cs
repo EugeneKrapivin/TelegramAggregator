@@ -5,6 +5,8 @@ using TelegramAggregator.Common.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add OpenAPI and Scalar for API documentation
 builder.Services.AddOpenApi();
 
@@ -12,6 +14,8 @@ builder.Services.AddOpenApi();
 builder.AddNpgsqlDbContext<AppDbContext>("postgres");
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
