@@ -30,55 +30,55 @@ export function ChannelModal({ channel, onSave, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold mb-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-md p-6">
+        <h2 className="text-base font-semibold text-zinc-100 mb-5">
           {channel ? 'Edit Channel' : 'Add Channel'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Telegram Channel ID</span>
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Telegram Channel ID</span>
             <input
               type="number"
               required
               disabled={!!channel}
               value={telegramChannelId}
               onChange={e => setTelegramChannelId(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className="mt-1.5 block w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed font-['JetBrains_Mono']"
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Username</span>
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Username</span>
             <input
               type="text"
               required
               value={username}
               onChange={e => setUsername(e.target.value)}
               placeholder="@channelname"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1.5 block w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 font-['JetBrains_Mono']"
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Title</span>
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Title</span>
             <input
               type="text"
               required
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1.5 block w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
             />
           </label>
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-2.5 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="px-4 py-2 rounded-lg bg-cyan-500 text-zinc-950 text-sm font-semibold hover:bg-cyan-400 transition-colors"
             >
               Save
             </button>
