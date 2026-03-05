@@ -8,5 +8,4 @@
   <Project Path="TelegramAggregator.MigrationService/TelegramAggregator.MigrationService.csproj" />
   <Project Path="TelegramAggregator.ServiceDefaults/TelegramAggregator.ServiceDefaults.csproj" />
   <Project Path="TelegramAggregator.Tests/TelegramAggregator.Tests.csproj" />
-  <Project Path="TelegramAggregator/TelegramAggregator.csproj" />
 </Solution>

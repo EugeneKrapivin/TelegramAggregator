@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Services;
 
-namespace TelegramAggregator.Background;
+namespace TelegramAggregator.Api.Background;
 
 public class IngestionBackgroundService : BackgroundService
 {

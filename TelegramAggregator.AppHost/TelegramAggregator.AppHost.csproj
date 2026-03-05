@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TelegramAggregator\TelegramAggregator.csproj" />
     <ProjectReference Include="..\TelegramAggregator.Api\TelegramAggregator.Api.csproj" />
     <ProjectReference Include="..\TelegramAggregator.MigrationService\TelegramAggregator.MigrationService.csproj" />
   </ItemGroup>

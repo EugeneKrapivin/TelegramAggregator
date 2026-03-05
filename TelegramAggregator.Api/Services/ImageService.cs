@@ -9,9 +9,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
-using TelegramAggregator.Config;
+using TelegramAggregator.Api.Config;
 
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public class ImageService : IImageService
 {

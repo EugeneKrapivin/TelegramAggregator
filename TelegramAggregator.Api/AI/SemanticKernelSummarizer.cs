@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace TelegramAggregator.AI;
+namespace TelegramAggregator.Api.AI;
 
 public class SemanticKernelSummarizer : ISemanticSummarizer
 {

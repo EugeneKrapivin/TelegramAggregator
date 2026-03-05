@@ -1,4 +1,4 @@
-namespace TelegramAggregator.AI;
+namespace TelegramAggregator.Api.AI;
 
 public interface ISemanticSummarizer
 {

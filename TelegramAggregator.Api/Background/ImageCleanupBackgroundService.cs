@@ -4,9 +4,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TelegramAggregator.Common.Data;
-using TelegramAggregator.Config;
+using TelegramAggregator.Api.Config;
 
-namespace TelegramAggregator.Background;
+namespace TelegramAggregator.Api.Background;
 
 public class ImageCleanupBackgroundService : BackgroundService
 {

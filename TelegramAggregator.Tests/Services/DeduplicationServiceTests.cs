@@ -4,7 +4,7 @@ using NSubstitute;
 using NUnit.Framework;
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Services;
 
 namespace TelegramAggregator.Tests.Services;
 

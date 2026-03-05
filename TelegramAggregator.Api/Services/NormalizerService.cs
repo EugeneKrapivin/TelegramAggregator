@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public class NormalizerService : INormalizerService
 {

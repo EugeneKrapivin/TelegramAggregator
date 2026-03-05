@@ -5,9 +5,9 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramAggregator.Common.Data;
-using TelegramAggregator.Config;
+using TelegramAggregator.Api.Config;
 
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public class TelegramPublisher : ITelegramPublisher
 {

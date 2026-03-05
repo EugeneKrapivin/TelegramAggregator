@@ -1,7 +1,13 @@
 using TelegramAggregator.Common.Data.Entities;
 using TelegramAggregator.Common.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TelegramAggregator.Common.Data;
+using TelegramAggregator.Api.Config;
+using TelegramAggregator.Api.Services;
+using TelegramAggregator.Api.AI;
+using TelegramAggregator.Api.Background;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +18,27 @@ builder.Services.AddOpenApi();
 
 // Add database context (uses Aspire's Npgsql integration)
 builder.AddNpgsqlDbContext<AppDbContext>("telegram-new-aggregator");
+
+// Configuration
+builder.Services.Configure<WorkerOptions>(builder.Configuration.GetSection("Worker"));
+builder.Services.Configure<TelegramOptions>(builder.Configuration.GetSection("Telegram"));
+
+// Register Telegram bot client
+builder.Services.AddSingleton<ITelegramBotClient>(sp =>
+    new TelegramBotClient(sp.GetRequiredService<IOptions<TelegramOptions>>().Value.BotToken));
+
+// Register core services (singletons - use IServiceScopeFactory for DbContext)
+builder.Services.AddSingleton<IImageService, ImageService>();
+builder.Services.AddSingleton<ITelegramPublisher, TelegramPublisher>();
+builder.Services.AddSingleton<ISemanticSummarizer, SemanticKernelSummarizer>();
+builder.Services.AddSingleton<INormalizerService, NormalizerService>();
+builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
+builder.Services.AddSingleton<WTelegramClientAdapter>();
+
+// Register background workers
+builder.Services.AddHostedService<SummaryBackgroundService>();
+builder.Services.AddHostedService<ImageCleanupBackgroundService>();
+builder.Services.AddHostedService<IngestionBackgroundService>();
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-namespace TelegramAggregator.Config;
+namespace TelegramAggregator.Api.Config;
 
 public class TelegramOptions
 {

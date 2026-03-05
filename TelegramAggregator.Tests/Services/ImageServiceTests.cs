@@ -5,8 +5,8 @@ using NSubstitute;
 using NUnit.Framework;
 using SixLabors.ImageSharp;
 using TelegramAggregator.Common.Data;
-using TelegramAggregator.Config;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Config;
+using TelegramAggregator.Api.Services;
 
 namespace TelegramAggregator.Tests.Services;
 

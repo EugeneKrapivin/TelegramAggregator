@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Services;
 
 namespace TelegramAggregator.Tests.Services;
 

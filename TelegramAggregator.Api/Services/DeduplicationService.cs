@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TelegramAggregator.Common.Data;
 
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public class DeduplicationService : IDeduplicationService
 {

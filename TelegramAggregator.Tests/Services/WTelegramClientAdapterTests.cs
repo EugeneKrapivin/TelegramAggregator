@@ -5,7 +5,7 @@ using NUnit.Framework;
 using TL;
 using TelegramAggregator.Common.Data;
 using Channel = TelegramAggregator.Common.Data.Entities.Channel;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Services;
 
 namespace TelegramAggregator.Tests.Services;
 

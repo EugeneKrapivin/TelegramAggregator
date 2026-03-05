@@ -6,13 +6,13 @@ using Microsoft.Extensions.Options;
 
 using System.Text.Json;
 
-using TelegramAggregator.AI;
+using TelegramAggregator.Api.AI;
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
-using TelegramAggregator.Config;
-using TelegramAggregator.Services;
+using TelegramAggregator.Api.Config;
+using TelegramAggregator.Api.Services;
 
-namespace TelegramAggregator.Background;
+namespace TelegramAggregator.Api.Background;
 
 public class SummaryBackgroundService : BackgroundService
 {

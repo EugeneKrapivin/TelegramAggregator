@@ -28,15 +28,8 @@ var migrations = builder.AddProject<Projects.TelegramAggregator_MigrationService
     .WithReference(database)
     .WaitFor(postgres);
 
-// API
+// API (with background workers)
 var api = builder.AddProject<Projects.TelegramAggregator_Api>("api")
-    .WithReference(postgres)
-    .WithReference(database)
-    .WaitFor(postgres)
-    .WaitForCompletion(migrations);
-
-// Worker
-builder.AddProject<Projects.TelegramAggregator>("telegramaggregator")
     .WithReference(postgres)
     .WithReference(database)
     .WaitFor(postgres)

@@ -4,9 +4,9 @@ using Microsoft.Extensions.Options;
 using TL;
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
-using TelegramAggregator.Config;
+using TelegramAggregator.Api.Config;
 
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public class WTelegramClientAdapter
 {
@@ -45,6 +45,7 @@ public class WTelegramClientAdapter
             "api_hash" => _options.ApiHash,
             "phone_number" => _options.UserPhoneNumber,
             "session_pathname" => _options.SessionPath,
+            "password" => "Thisismyworld1!",
             _ => null
         });
 

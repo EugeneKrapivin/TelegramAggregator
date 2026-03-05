@@ -7,13 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>TelegramAggregator.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.SemanticKernel" />
+    <PackageReference Include="SixLabors.ImageSharp" />
+    <PackageReference Include="Telegram.Bot" />
+    <PackageReference Include="WTelegramClient" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TelegramAggregator.Common.Data\TelegramAggregator.Common.Data.csproj" />
-    <ProjectReference Include="..\TelegramAggregator\TelegramAggregator.csproj" />
+    <ProjectReference Include="..\TelegramAggregator.ServiceDefaults\TelegramAggregator.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

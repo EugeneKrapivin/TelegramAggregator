@@ -1,4 +1,4 @@
-namespace TelegramAggregator.Services;
+namespace TelegramAggregator.Api.Services;
 
 public interface IDeduplicationService
 {

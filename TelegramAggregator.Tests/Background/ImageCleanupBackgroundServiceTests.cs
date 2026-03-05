@@ -4,10 +4,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
-using TelegramAggregator.Background;
+using TelegramAggregator.Api.Background;
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
-using TelegramAggregator.Config;
+using TelegramAggregator.Api.Config;
 
 namespace TelegramAggregator.Tests.Background;
 
