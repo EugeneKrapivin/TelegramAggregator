@@ -16,6 +16,7 @@ Reference for deploying TelegramAggregator to Azure using Azure Container Apps a
 8. [Wiring Everything into AppHost.cs](#8-wiring-everything-into-apphostcs)
 9. [Redeploying After Changes](#9-redeploying-after-changes)
 10. [Tearing Down](#10-tearing-down)
+11. [CI/CD with GitHub Actions](#11-cicd-with-github-actions)
 
 ---
 
@@ -485,13 +486,7 @@ The double-underscore env var convention (`SemanticKernel__AzureOpenAI__Deployme
 
 `azd deploy` is much faster than `azd up` — it skips infrastructure provisioning and just rebuilds + redeploys containers.
 
-### CI/CD with GitHub Actions
-
-```bash
-azd pipeline config
-```
-
-This command creates a GitHub Actions workflow (`.github/workflows/azure-dev.yml`) and registers the required Azure credentials as GitHub secrets. After that, every push to `main` triggers `azd up` automatically.
+See [Section 11](#11-cicd-with-github-actions) for the full GitHub Actions setup.
 
 ---
 
@@ -513,20 +508,218 @@ azd down --purge
 
 ---
 
+## 11. CI/CD with GitHub Actions
+
+This section covers setting up automatic deployment to Azure on every push to `main`. All secrets (Telegram, OpenAI, Grafana/OTLP) live in GitHub Secrets — nothing sensitive is committed to the repo.
+
+### Overview of what azd sets up
+
+`azd pipeline config` does two things:
+1. Creates a **service principal** (or configures OIDC federated credentials) in your Azure tenant and stores the Azure auth details as GitHub repository secrets/variables
+2. Generates `.github/workflows/azure-dev.yml` — a workflow that runs `azd provision` + `azd deploy` on push to `main`
+
+It does **not** know about your application secrets (Telegram, OpenAI, OTLP). You add those to GitHub Secrets separately, and the workflow reads them before running azd.
+
+---
+
+### Step 1: Run `azd pipeline config`
+
+Run this once from your local machine (you must be logged in with `azd auth login` first):
+
+```bash
+azd pipeline config
+```
+
+When prompted:
+- **Pipeline provider**: select `GitHub`
+- **Authentication type**: select `Federated` (OIDC, no rotating client secrets) — preferred over `Client Credentials`
+- **Repository**: confirm your GitHub repo (`owner/TelegramAggregator`)
+
+This sets up the following in your GitHub repository:
+
+| GitHub Secret/Variable | Value | Set by |
+|---|---|---|
+| `AZURE_CLIENT_ID` | App registration client ID | `azd pipeline config` |
+| `AZURE_TENANT_ID` | Azure AD tenant ID | `azd pipeline config` |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID | `azd pipeline config` |
+| `AZURE_ENV_NAME` | e.g. `prod` | `azd pipeline config` |
+| `AZURE_LOCATION` | e.g. `swedencentral` | `azd pipeline config` |
+
+> **Note:** With federated credentials (OIDC), GitHub Actions authenticates to Azure without any long-lived secret — it uses a short-lived token exchange. This is the secure default.
+
+---
+
+### Step 2: Add application secrets to GitHub
+
+These are the secrets azd needs at deploy time but that `azd pipeline config` doesn't know about. Add them in **GitHub → your repo → Settings → Secrets and variables → Actions → New repository secret**.
+
+Add one secret for each value:
+
+| GitHub Secret name | Value |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | Your bot token from @BotFather |
+| `TELEGRAM_API_ID` | From https://my.telegram.org/apps |
+| `TELEGRAM_API_HASH` | From https://my.telegram.org/apps |
+| `TELEGRAM_USER_PHONE_NUMBER` | e.g. `+12025550123` |
+| `AZURE_OPENAI_ENDPOINT` | e.g. `https://telegram-aggregator-ai.openai.azure.com/` |
+| `AZURE_OPENAI_API_KEY` | 32-character hex key |
+| `AZURE_OPENAI_DEPLOYMENT` | e.g. `summarizer` |
+| `OTLP_ENDPOINT` | e.g. `https://otlp-gateway-prod-eu-west-0.grafana.net/otlp` |
+| `OTLP_HEADERS` | e.g. `Authorization=Basic <base64token>` |
+| `OTLP_PROTOCOL` | `http/protobuf` |
+
+> **Grafana Cloud tip:** Your Grafana Cloud stack page (My Account → your stack → OpenTelemetry) shows these values pre-formatted including the base64-encoded `Authorization` header. Copy them directly.
+
+---
+
+### Step 3: Update the generated workflow
+
+`azd pipeline config` generates a minimal workflow. You need to extend it to inject your application secrets into the azd environment before provisioning. Replace or update `.github/workflows/azure-dev.yml` with the following:
+
+```yaml
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+permissions:
+  id-token: write   # required for OIDC federated auth
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID:       ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID:       ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME:        ${{ vars.AZURE_ENV_NAME }}
+      AZURE_LOCATION:        ${{ vars.AZURE_LOCATION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Install azd
+        uses: Azure/setup-azd@v2
+
+      - name: Log in to Azure (OIDC)
+        run: |
+          azd auth login \
+            --client-id "$AZURE_CLIENT_ID" \
+            --federated-credential-provider github \
+            --tenant-id "$AZURE_TENANT_ID"
+
+      - name: Set application secrets in azd environment
+        run: |
+          azd env set telegram-bot-token            "${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          azd env set telegram-api-id               "${{ secrets.TELEGRAM_API_ID }}"
+          azd env set telegram-api-hash             "${{ secrets.TELEGRAM_API_HASH }}"
+          azd env set telegram-user-phone-number    "${{ secrets.TELEGRAM_USER_PHONE_NUMBER }}"
+          azd env set azure-openai-endpoint         "${{ secrets.AZURE_OPENAI_ENDPOINT }}"
+          azd env set azure-openai-api-key          "${{ secrets.AZURE_OPENAI_API_KEY }}"
+          azd env set azure-openai-deployment       "${{ secrets.AZURE_OPENAI_DEPLOYMENT }}"
+          azd env set otlp-endpoint                 "${{ secrets.OTLP_ENDPOINT }}"
+          azd env set otlp-headers                  "${{ secrets.OTLP_HEADERS }}"
+          azd env set otlp-protocol                 "${{ secrets.OTLP_PROTOCOL }}"
+
+      - name: Provision infrastructure
+        run: azd provision --no-prompt
+
+      - name: Deploy application
+        run: azd deploy --no-prompt
+```
+
+**Why `provision` and `deploy` separately instead of `azd up`?**
+
+`azd up` = `azd provision` + `azd deploy`. Splitting them makes failures easier to diagnose in the Actions log. If infrastructure is already up-to-date, `azd provision` completes in seconds; only `azd deploy` takes time.
+
+---
+
+### Step 4: Commit the workflow
+
+```bash
+git add .github/workflows/azure-dev.yml
+git commit -m "ci: add GitHub Actions deployment workflow"
+git push
+```
+
+The first push to `main` triggers the workflow. Monitor it in **GitHub → Actions**.
+
+---
+
+### Rotating a secret
+
+When a secret changes (e.g. you regenerate the OpenAI API key):
+
+1. Update the value in GitHub Secrets (**Settings → Secrets and variables → Actions**)
+2. Trigger a redeploy — either push a commit to `main`, or use **Actions → Run workflow** (manual trigger) to run the workflow without a code change
+
+The `workflow_dispatch` trigger in the workflow above enables this.
+
+---
+
+### Protecting `main` (recommended)
+
+Since every push to `main` deploys to production, consider adding branch protection:
+
+1. **GitHub → Settings → Branches → Add rule** for `main`
+2. Enable **Require a pull request before merging**
+3. Enable **Require status checks to pass** — add your unit test CI job as a required check
+
+This ensures code is reviewed and tests pass before anything reaches production.
+
+---
+
+### Multiple environments (prod / staging)
+
+To deploy to a staging environment from a different branch:
+
+```yaml
+on:
+  push:
+    branches:
+      - main       # deploys to prod
+      - staging    # deploys to staging
+```
+
+```yaml
+env:
+  AZURE_ENV_NAME: ${{ github.ref_name == 'main' && 'prod' || 'staging' }}
+```
+
+Each environment has its own set of GitHub Secrets. Use GitHub Environments (**Settings → Environments**) to scope secrets per environment and add required reviewers for the production deployment.
+
+---
+
 ## Quick Reference
 
 ```bash
-# First-time deployment
+# First-time deployment (local)
 azd init
 azd env set <param> <value>   # repeat for all secrets
 azd auth login
 azd up
 
-# Subsequent deployments (code only)
+# Subsequent deployments (code only, local)
 azd deploy
 
-# Redeploy after infrastructure change
+# Redeploy after infrastructure change (local)
 azd up
+
+# Set up GitHub Actions CI/CD (run once, locally)
+azd pipeline config
+
+# Trigger production deploy without a code change
+# GitHub → Actions → Deploy to Azure → Run workflow
 
 # View logs
 az containerapp logs show \
@@ -534,7 +727,7 @@ az containerapp logs show \
   --resource-group <rg> \
   --follow
 
-# Rotate OpenAI key
+# Rotate a secret (local → re-provision, or update GitHub Secret → re-run workflow)
 azd env set azure-openai-api-key "<new-key>"
 azd provision
 
