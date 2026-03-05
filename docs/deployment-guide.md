@@ -76,7 +76,7 @@ Azure AI Foundry (formerly Azure OpenAI Studio) is where you provision the OpenA
 4. Fill in:
    - **Subscription**: your Azure subscription
    - **Resource group**: use the same one `azd` will create, or a dedicated one
-   - **Region**: `swedencentral` or `eastus2` — both have the full model catalogue including `gpt-4.1-mini` and `gpt-4o-mini`
+   - **Region**: `swedencentral` or `eastus2` — both have the full model catalogue including `gpt-4.1-nano` and `gpt-4o-mini`
    - **Name**: e.g. `telegram-aggregator-ai`
 5. Click **Create**
 
@@ -113,7 +113,7 @@ az cognitiveservices account deployment create \
   --name telegram-aggregator-ai \
   --resource-group <your-rg> \
   --deployment-name summarizer \
-  --model-name gpt-4.1-mini \
+  --model-name gpt-4.1-nano \
   --model-version 2025-04-14 \
   --model-format OpenAI \
   --sku-capacity 40 \
@@ -159,24 +159,26 @@ The summarization task is: batch up ~10–50 Telegram posts (plain text), produc
 
 This is **not** a complex reasoning task. Avoid o-series (reasoning) models — they are slower, more expensive, and built for multi-step problem solving, not text summarization.
 
-### Recommendation: `gpt-4.1-mini`
+### Recommendation: `gpt-4.1-nano`
 
-| | gpt-4.1-mini | gpt-4o-mini | gpt-4.1-nano |
+| | gpt-4.1-nano | gpt-4.1-mini | gpt-4o-mini |
 |---|---|---|---|
-| Released | April 2025 | July 2024 | April 2025 |
-| Context window | 1M tokens | 128K tokens | 1M tokens |
-| Input cost (per 1M tokens) | ~$0.40 | ~$0.15 | ~$0.10 |
-| Output cost (per 1M tokens) | ~$1.60 | ~$0.60 | ~$0.40 |
-| Quality for summarization | Excellent | Very good | Good |
-| Availability | `swedencentral`, `eastus`, `eastus2`, most regions | Universal | `swedencentral`, `eastus`, `eastus2` |
+| Released | April 2025 | April 2025 | July 2024 |
+| Context window | 1M tokens | 1M tokens | 128K tokens |
+| Input cost (per 1M tokens) | ~$0.10 | ~$0.40 | ~$0.15 |
+| Output cost (per 1M tokens) | ~$0.40 | ~$1.60 | ~$0.60 |
+| Quality for summarization | Good | Excellent | Very good |
+| Availability | `swedencentral`, `eastus`, `eastus2` | `swedencentral`, `eastus`, `eastus2`, most regions | Universal |
 
-**Use `gpt-4.1-mini`** as the default. It has a 1M token context window (useful if you ever need to include more posts), strong instruction-following for formatting the summary, and is cheap enough that at 10-minute intervals the monthly cost is negligible (a few dollars).
+**Use `gpt-4.1-nano`** as the default. It has a 1M token context window, solid instruction-following for formatting summaries, and at 4× cheaper than `gpt-4.1-mini` the monthly cost is around $5 — essentially free for this workload.
 
-**Fallback: `gpt-4o-mini`** if `gpt-4.1-mini` is unavailable in your chosen region. Essentially the same price point, very widely available, very capable for summarization.
+**Step up to `gpt-4.1-mini`** if summary quality is noticeably poor or if you add more complex formatting/synthesis requirements. Same context window, 4× the cost.
+
+**Fallback: `gpt-4o-mini`** if neither `gpt-4.1` model is available in your chosen region. Very widely available, very capable for summarization.
 
 **Avoid for this task:**
 - `gpt-4.1`, `gpt-4o` — 10–25× more expensive, no meaningful quality improvement for summarization
-- `o4-mini`, `o3-mini` — reasoning models, 3–5× more expensive, slower (reasoning tokens add latency)
+- `o4-mini`, `o3-mini`, `gpt-5-nano` — reasoning models, spend tokens on internal thinking before responding, billed separately, wrong tool for text summarization
 - `gpt-35-turbo` — being deprecated, avoid new deployments
 
 ### Cost Estimate
@@ -184,12 +186,12 @@ This is **not** a complex reasoning task. Avoid o-series (reasoning) models — 
 Assuming 50 posts × 200 tokens each = ~10K input tokens per run, 500 token output, 6 runs/hour, 24h/day, 30 days:
 
 ```
-Input:  6 × 24 × 30 × 10,000  = 43.2M tokens  × $0.40/1M = ~$17/month
-Output: 6 × 24 × 30 × 500     =  2.16M tokens  × $1.60/1M = ~$3.50/month
-Total: ~$20/month for gpt-4.1-mini
+Input:  6 × 24 × 30 × 10,000  = 43.2M tokens  × $0.10/1M = ~$4.30/month
+Output: 6 × 24 × 30 × 500     =  2.16M tokens  × $0.40/1M = ~$0.86/month
+Total: ~$5/month for gpt-4.1-nano
 ```
 
-With `gpt-4o-mini` that drops to ~$7/month. Both are negligible.
+With `gpt-4.1-mini` that rises to ~$20/month. Both are negligible for a personal project.
 
 ---
 
