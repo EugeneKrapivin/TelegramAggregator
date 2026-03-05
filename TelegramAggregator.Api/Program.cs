@@ -11,7 +11,7 @@ builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
 
 // Add database context (uses Aspire's Npgsql integration)
-builder.AddNpgsqlDbContext<AppDbContext>("postgres");
+builder.AddNpgsqlDbContext<AppDbContext>("telegram-new-aggregator");
 
 var app = builder.Build();
 
@@ -58,6 +58,12 @@ channelsGroup.MapDelete("/{id}", DeleteChannel)
     .WithName("DeleteChannel")
     .WithSummary("Delete channel")
     .WithDescription("Remove a channel from monitoring");
+
+// GET /api/channels/{id}/posts/count
+channelsGroup.MapGet("/{id}/posts/count", GetChannelPostCount)
+    .WithName("GetChannelPostCount")
+    .WithSummary("Get post count for channel")
+    .WithDescription("Returns the total number of posts ingested for the channel.");
 
 await app.RunAsync();
 
@@ -146,4 +152,14 @@ async Task<IResult> DeleteChannel(long id, AppDbContext db)
     await db.SaveChangesAsync();
 
     return Results.NoContent();
+}
+
+async Task<IResult> GetChannelPostCount(long id, AppDbContext db)
+{
+    var exists = await db.Channels.AnyAsync(c => c.Id == id);
+    if (!exists)
+        return Results.NotFound();
+
+    var count = await db.Posts.CountAsync(p => p.ChannelId == id);
+    return Results.Ok(new { count });
 }
