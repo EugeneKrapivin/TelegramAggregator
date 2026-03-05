@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Channel, CreateChannelRequest } from '../api';
+import type { Channel, CreateChannelRequest } from '../api';
 
 interface Props {
   channel: Channel | null;   // null = create mode

@@ -1,4 +1,4 @@
-import { Channel } from '../api';
+import type { Channel } from '../api';
 
 interface Props {
   channels: Channel[];
