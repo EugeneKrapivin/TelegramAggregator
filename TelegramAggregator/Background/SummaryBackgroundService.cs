@@ -3,6 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using System.Text.Json;
+
 using TelegramAggregator.AI;
 using TelegramAggregator.Common.Data;
 using TelegramAggregator.Common.Data.Entities;
@@ -44,11 +47,20 @@ public class SummaryBackgroundService : BackgroundService
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                try { await ExecuteSummaryAsync(stoppingToken); }
-                catch (Exception ex) { _logger.LogError(ex, "Error executing summary cycle"); }
+                try 
+                { 
+                    await ExecuteSummaryAsync(stoppingToken); 
+                }
+                catch (Exception ex) 
+                { 
+                    _logger.LogError(ex, "Error executing summary cycle"); 
+                }
             }
         }
-        catch (OperationCanceledException) { _logger.LogInformation("SummaryBackgroundService stopping"); }
+        catch (OperationCanceledException) 
+        { 
+            _logger.LogInformation("SummaryBackgroundService stopping"); 
+        }
     }
 
     internal async Task ExecuteSummaryAsync(CancellationToken cancellationToken)
@@ -94,17 +106,19 @@ public class SummaryBackgroundService : BackgroundService
 
         dbContext.Summaries.Add(new Summary
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             WindowStart = posts.Min(p => p.PublishedAt),
             WindowEnd = startTime,
             Headline = headline,
             SummaryText = digest,
             PublishedAt = DateTime.UtcNow,
-            IncludedPostIds = System.Text.Json.JsonSerializer.Serialize(posts.Select(p => p.Id).ToList())
+            IncludedPostIds = JsonSerializer.Serialize(posts.Select(p => p.Id).ToList())
         });
 
         foreach (var post in posts)
+        {
             post.IsSummarized = true;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await _imageService.ClearContentBatchAsync(imageIds, cancellationToken);

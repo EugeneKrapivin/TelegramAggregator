@@ -49,7 +49,7 @@ public class WTelegramClientAdapter
         });
 
         _client.OnUpdates += HandleUpdateAsync;
-
+        
         var user = await _client.LoginUserIfNeeded();
         _logger.LogInformation("Connected as @{Username} (id={UserId})", user.username, user.id);
     }
@@ -78,7 +78,9 @@ public class WTelegramClientAdapter
         }
 
         var channel = await _dbContext.Channels
-            .FirstOrDefaultAsync(c => c.TelegramChannelId == peerChannel.channel_id && c.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(c => 
+                c.TelegramChannelId == peerChannel.channel_id && c.IsActive, 
+                cancellationToken);
 
         if (channel is null)
         {
@@ -104,7 +106,10 @@ public class WTelegramClientAdapter
                 imageIds.Add(imageId);
                 imageChecksums.Add(_imageService.ComputeSha256Hash(bytes));
             }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to process photo in message {MessageId}", msg.id); }
+            catch (Exception ex) 
+            { 
+                _logger.LogWarning(ex, "Failed to process photo in message {MessageId}", msg.id); 
+            }
         }
 
         var fingerprint = _deduplicationService.ComputeFingerprint(normalized.TextHash, imageChecksums);
@@ -132,10 +137,14 @@ public class WTelegramClientAdapter
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         foreach (var imageId in imageIds)
+        {
             _dbContext.PostImages.Add(new PostImage { PostId = post.Id, ImageId = imageId });
+        }
 
         if (imageIds.Count > 0)
+        {
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         _logger.LogInformation("Ingested post {PostId} from channel {ChannelId}", post.Id, channel.Id);
     }

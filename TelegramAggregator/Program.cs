@@ -15,15 +15,6 @@ var builder = Host.CreateApplicationBuilder(args);
 // Add Aspire service defaults (logging, health checks, telemetry, etc.)
 builder.AddServiceDefaults();
 
-// Add PostgreSQL database with EF Core via Aspire
-// Registers AppDbContext with:
-// - Connection string management from appsettings.json or environment
-// - Database health checks
-// - OpenTelemetry instrumentation and logging
-// - Automatic retry and resilience policies
-// - DbContext pooling
-// Reads config from "Aspire:Npgsql:EntityFrameworkCore:PostgreSQL:AppDbContext" 
-// or "Aspire:Npgsql:EntityFrameworkCore:PostgreSQL"
 builder.AddNpgsqlDbContext<AppDbContext>("postgres");
 
 // Configuration

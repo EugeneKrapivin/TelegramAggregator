@@ -21,9 +21,13 @@ public class IngestionBackgroundService : BackgroundService
         try
         {
             await _adapter.ConnectAsync(stoppingToken);
+            // TODO: should I replace Task.Delay with a TaskCompletionSource?
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
-        catch (OperationCanceledException) { _logger.LogInformation("IngestionBackgroundService stopping"); }
+        catch (OperationCanceledException) 
+        { 
+            _logger.LogInformation("IngestionBackgroundService stopping"); 
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "IngestionBackgroundService fatal error");

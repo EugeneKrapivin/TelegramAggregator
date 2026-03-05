@@ -44,11 +44,13 @@ public class TelegramPublisher : ITelegramPublisher
         {
             _logger.LogInformation("Publishing summary with {Count} images to channel {ChannelId}", media.Count, _summaryChannelId);
             var messages = await _botClient.SendMediaGroup(chatId, media, cancellationToken: cancellationToken);
+            
             return messages[0].MessageId;
         }
 
         _logger.LogInformation("Publishing text-only summary to channel {ChannelId}", _summaryChannelId);
         var message = await _botClient.SendMessage(chatId, text, parseMode: ParseMode.Markdown, cancellationToken: cancellationToken);
+        
         return message.MessageId;
     }
 
@@ -57,7 +59,10 @@ public class TelegramPublisher : ITelegramPublisher
         string caption,
         CancellationToken cancellationToken)
     {
-        if (imageIds.Count == 0) return [];
+        if (imageIds.Count == 0)
+        {
+            return [];
+        }
 
         var images = await _dbContext.Images
             .Where(i => imageIds.Contains(i.Id))
@@ -71,9 +76,13 @@ public class TelegramPublisher : ITelegramPublisher
             InputFile? inputFile;
 
             if (image.Content is not null)
+            {
                 inputFile = InputFile.FromStream(new MemoryStream(image.Content), "image.jpg");
+            }
             else if (image.TelegramFileId is not null)
+            {
                 inputFile = InputFile.FromFileId(image.TelegramFileId);
+            }
             else
             {
                 _logger.LogWarning("Image {ImageId} has no content or file ID — skipping", image.Id);
