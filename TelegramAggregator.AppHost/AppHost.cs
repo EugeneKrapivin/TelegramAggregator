@@ -19,22 +19,26 @@ var azureOpenAiApiKey = builder.AddParameter("azure-openai-api-key", secret: tru
 // PostgreSQL — Docker container in dev; supply connection string externally for any other target
 var postgres = builder.AddPostgres("postgres")
     .WithDataVolume()
-    .AddDatabase("postgres");
+    .WithPgAdmin();
+var database = postgres.AddDatabase("telegram-new-aggregator");
 
 // Migration service — runs MigrateAsync() then exits; gates everything else
 var migrations = builder.AddProject<Projects.TelegramAggregator_MigrationService>("migrations")
     .WithReference(postgres)
+    .WithReference(database)
     .WaitFor(postgres);
 
 // API
 var api = builder.AddProject<Projects.TelegramAggregator_Api>("api")
     .WithReference(postgres)
+    .WithReference(database)
     .WaitFor(postgres)
     .WaitForCompletion(migrations);
 
 // Worker
 builder.AddProject<Projects.TelegramAggregator>("telegramaggregator")
     .WithReference(postgres)
+    .WithReference(database)
     .WaitFor(postgres)
     .WaitForCompletion(migrations)
     .WithEnvironment("Telegram__BotToken", telegramBotToken)
@@ -43,6 +47,12 @@ builder.AddProject<Projects.TelegramAggregator>("telegramaggregator")
     .WithEnvironment("Telegram__UserPhoneNumber", telegramUserPhoneNumber)
     .WithEnvironment("SemanticKernel__AzureOpenAI__Endpoint", azureOpenAiEndpoint)
     .WithEnvironment("SemanticKernel__AzureOpenAI__ApiKey", azureOpenAiApiKey);
+
+// ── UI (Vite dev server) ──────────────────────────────────────────────────────
+builder.AddViteApp("ui", "../TelegramAggregator.Web")
+    .WithNpm(installCommand: "ci")
+    .WithReference(api)
+    .WithExternalHttpEndpoints();
 
 // Scalar API docs
 var scalar = builder.AddScalarApiReference();
