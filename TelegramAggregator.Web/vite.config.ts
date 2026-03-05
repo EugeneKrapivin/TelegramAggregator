@@ -7,8 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env['services__api__http__0'] ?? 'http://localhost:5068',
+        target: process.env['services__api__https__0'] ?? process.env['services__api__http__0'] ?? 'https://localhost:7169',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
