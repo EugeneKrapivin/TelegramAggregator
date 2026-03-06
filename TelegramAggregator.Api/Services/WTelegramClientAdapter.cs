@@ -55,12 +55,17 @@ public class WTelegramClientAdapter
         {
             // Check if session file exists before attempting login
             var sessionPath = Path.Combine("data", "wtelegram.session");
+            var fullPath = Path.GetFullPath(sessionPath);
+            
+            _logger.LogInformation("Checking for session file at: {Path}", fullPath);
+            
             if (!File.Exists(sessionPath))
             {
                 _logger.LogInformation("No session file found - manual login required via /settings/telegram-login");
                 return;
             }
 
+            _logger.LogInformation("Session file found, attempting auto-login");
             // If session file exists, try to auto-login
             var user = await Client.LoginUserIfNeeded();
             _logger.LogInformation("Auto-login successful: @{Username} (id={UserId})", user.username, user.id);
@@ -87,16 +92,21 @@ public class WTelegramClientAdapter
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
+        var sessionPath = Path.Combine("data", "wtelegram.session");
+        var fullPath = Path.GetFullPath(sessionPath);
+        var workingDir = Directory.GetCurrentDirectory();
+        
         _logger.LogInformation("Initializing Telegram client connection");
+        _logger.LogInformation("Working directory: {WorkingDir}", workingDir);
+        _logger.LogInformation("Session path: {SessionPath} (full: {FullPath})", sessionPath, fullPath);
 
         // Initialize client but don't trigger auto-login yet
         _ = Client;
 
         // Only attempt auto-login if session file exists
-        var sessionPath = Path.Combine("data", "wtelegram.session");
         if (!File.Exists(sessionPath))
         {
-            _logger.LogInformation("No Telegram session found. Please login via /settings/telegram-login");
+            _logger.LogInformation("No Telegram session found at {Path}. Please login via /settings/telegram-login", fullPath);
             return;
         }
 
