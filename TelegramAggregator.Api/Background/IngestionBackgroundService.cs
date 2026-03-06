@@ -18,11 +18,32 @@ public class IngestionBackgroundService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("IngestionBackgroundService starting");
+        
         try
         {
+            // Connect and authenticate
             await _adapter.ConnectAsync(stoppingToken);
-            // TODO: should I replace Task.Delay with a TaskCompletionSource?
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+            
+            // Start polling loop
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await _adapter.PollChannelsAsync(stoppingToken);
+                    
+                    // Wait 5 minutes before next poll
+                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break; // Normal shutdown
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during channel polling, will retry in 30 seconds");
+                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                }
+            }
         }
         catch (OperationCanceledException) 
         { 

@@ -131,6 +131,81 @@ public class WTelegramClientAdapter
         }
     }
 
+    public async Task PollChannelsAsync(CancellationToken cancellationToken = default)
+    {
+        if (Client.User == null)
+        {
+            _logger.LogWarning("Not logged in, skipping channel poll");
+            return;
+        }
+
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        
+        var channels = await db.Channels
+            .Where(c => c.IsActive)
+            .ToListAsync(cancellationToken);
+
+        if (channels.Count == 0)
+        {
+            _logger.LogDebug("No active channels to poll");
+            return;
+        }
+
+        _logger.LogInformation("Polling {Count} active channels for new messages", channels.Count);
+
+        foreach (var channel in channels)
+        {
+            try
+            {
+                var peer = new InputPeerChannel(channel.TelegramChannelId, 0);
+                
+                // Get the latest message ID we've already ingested for this channel
+                var lastIngestedMessageId = await db.Posts
+                    .Where(p => p.ChannelId == channel.Id)
+                    .OrderByDescending(p => p.TelegramMessageId)
+                    .Select(p => p.TelegramMessageId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                
+                // Get latest 100 messages from this channel
+                var history = await Client.Messages_GetHistory(peer, limit: 100);
+                
+                _logger.LogDebug("Retrieved {Count} messages from channel {ChannelId}, last ingested: {LastId}", 
+                    history.Messages.Length, channel.Id, lastIngestedMessageId);
+
+                int newMessagesCount = 0;
+                foreach (var msgBase in history.Messages)
+                {
+                    if (msgBase is Message msg)
+                    {
+                        // Skip if we've already ingested this message
+                        if (msg.id <= lastIngestedMessageId)
+                        {
+                            _logger.LogDebug("Skipping already-ingested message {MessageId}", msg.id);
+                            continue;
+                        }
+
+                        await ReceiveAndProcessPostAsync(msg, cancellationToken);
+                        newMessagesCount++;
+                    }
+                }
+
+                if (newMessagesCount > 0)
+                {
+                    _logger.LogInformation("Ingested {Count} new messages from channel {ChannelTitle}",
+                        newMessagesCount, channel.Title);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error polling channel {ChannelId} ({ChannelTitle})", 
+                    channel.Id, channel.Title);
+            }
+        }
+
+        _logger.LogInformation("Completed polling all channels");
+    }
+
     internal async Task ReceiveAndProcessPostAsync(Message msg, CancellationToken cancellationToken = default)
     {
         if (msg.peer_id is not PeerChannel peerChannel)
