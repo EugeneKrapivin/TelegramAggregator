@@ -18,7 +18,7 @@ public class WorkerOptions
     /// Example: -1001234567890
     /// To find your channel ID: Add @raw_data_bot to channel, or use format -100 + channel_id from URL.
     /// </summary>
-    public long SummaryChannelId { get; set; } = 0; // Must be configured - see docs/telegram-bot-configuration.md
+    public long SummaryChannelId { get; set; } = -1003814174631; // Must be configured - see docs/telegram-bot-configuration.md
 
     /// <summary>
     /// Duration for which images are retained before being cleaned up. Default is 7 days.

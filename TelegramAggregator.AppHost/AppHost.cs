@@ -15,6 +15,8 @@ var azureOpenAiEndpoint = builder.AddParameter("azure-openai-endpoint", secret: 
     .WithDescription("Azure OpenAI service endpoint URL");
 var azureOpenAiApiKey = builder.AddParameter("azure-openai-api-key", secret: true)
     .WithDescription("API key for Azure OpenAI service");
+var summaryChannelId = builder.AddParameter("worker-summary-channel-id")
+    .WithDescription("Telegram channel ID for posting summaries (must be negative, format: -100XXXXXXXXXX)");
 
 // PostgreSQL — Docker container in dev; supply connection string externally for any other target
 var postgres = builder.AddPostgres("postgres")
@@ -39,7 +41,8 @@ var api = builder.AddProject<Projects.TelegramAggregator_Api>("api")
     .WithEnvironment("Telegram__ApiHash", telegramApiHash)
     .WithEnvironment("Telegram__UserPhoneNumber", telegramUserPhoneNumber)
     .WithEnvironment("SemanticKernel__AzureOpenAI__Endpoint", azureOpenAiEndpoint)
-    .WithEnvironment("SemanticKernel__AzureOpenAI__ApiKey", azureOpenAiApiKey);
+    .WithEnvironment("SemanticKernel__AzureOpenAI__ApiKey", azureOpenAiApiKey)
+    .WithEnvironment("Worker__SummaryChannelId", summaryChannelId);
 
 // ── UI (Vite dev server) ──────────────────────────────────────────────────────
 builder.AddViteApp("ui", "../TelegramAggregator.Web")

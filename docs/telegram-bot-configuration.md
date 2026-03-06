@@ -37,16 +37,17 @@ Worker__SummaryChannelId=-1001234567890
 ```
 
 **Option C: Via Aspire Parameter (Recommended)**
-In `apphostconfig.json` or Aspire dashboard:
+
+Add to `TelegramAggregator.AppHost/appsettings.Development.json`:
 ```json
 {
   "Parameters": {
-    "worker-summary-channel-id": {
-      "value": "-1001234567890"
-    }
+    "worker-summary-channel-id": "-1001234567890"
   }
 }
 ```
+
+Or set via Aspire dashboard when prompted during `aspire run`.
 
 ### Important Notes
 
