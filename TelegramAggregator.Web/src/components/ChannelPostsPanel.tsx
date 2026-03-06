@@ -17,6 +17,7 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isInitialLoad = useRef(false);
+  const loadingRef = useRef(false); // Track loading state in ref to prevent race conditions
 
   const panelRef = useClickOutside<HTMLDivElement>({
     onClickOutside: onClose,
@@ -24,22 +25,32 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
   });
 
   const loadMore = useCallback(async () => {
-    if (!channelId || loading || !hasMore) return;
+    // Prevent concurrent loads using ref (doesn't cause re-render)
+    if (!channelId || loadingRef.current || !hasMore) return;
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
       const data = await getChannelPosts(channelId, page, 20);
-      setPosts((prev) => [...prev, ...data.posts]);
+      
+      // Deduplicate posts by ID to prevent duplicates
+      setPosts((prev) => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const newPosts = data.posts.filter(p => !existingIds.has(p.id));
+        return [...prev, ...newPosts];
+      });
+      
       setHasMore(data.hasMore);
       setPage((p) => p + 1);
     } catch (err) {
       setError(String(err));
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  }, [channelId, page, loading, hasMore]);
+  }, [channelId, page, hasMore]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
@@ -56,6 +67,7 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
       setHasMore(true);
       setError(null);
       isInitialLoad.current = false;
+      loadingRef.current = false;
       return;
     }
 
@@ -65,15 +77,16 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
     setHasMore(true);
     setError(null);
     isInitialLoad.current = true;
+    loadingRef.current = false;
   }, [channelId]);
 
   // Initial load - separate effect to avoid double-loading
   useEffect(() => {
-    if (isInitialLoad.current && posts.length === 0 && !loading && channelId !== null) {
+    if (isInitialLoad.current && posts.length === 0 && !loadingRef.current && channelId !== null) {
       isInitialLoad.current = false;
       loadMore();
     }
-  }, [posts.length, loading, channelId, loadMore]);
+  }, [posts.length, channelId, loadMore]);
 
   // ESC key handler
   useEffect(() => {

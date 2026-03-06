@@ -119,7 +119,7 @@ public class WTelegramClientAdapter
         var messages = update switch
         {
             Updates u => u.updates.OfType<UpdateNewChannelMessage>().Select(x => x.message),
-            _ => Enumerable.Empty<MessageBase>()
+            _ => []
         };
 
         foreach (var msg in messages.OfType<Message>())
