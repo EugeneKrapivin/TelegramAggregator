@@ -14,18 +14,18 @@ public class TelegramPublisher : ITelegramPublisher
     private readonly ILogger<TelegramPublisher> _logger;
     private readonly ITelegramBotClient _botClient;
     private readonly long _summaryChannelId;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public TelegramPublisher(
         ILogger<TelegramPublisher> logger,
         ITelegramBotClient botClient,
         IOptions<WorkerOptions> workerOptions,
-        AppDbContext dbContext)
+        IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _botClient = botClient;
         _summaryChannelId = workerOptions.Value.SummaryChannelId;
-        _dbContext = dbContext;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<long> PublishSummaryAsync(
@@ -64,7 +64,10 @@ public class TelegramPublisher : ITelegramPublisher
             return [];
         }
 
-        var images = await _dbContext.Images
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var images = await dbContext.Images
             .Where(i => imageIds.Contains(i.Id))
             .ToListAsync(cancellationToken);
 

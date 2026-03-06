@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -13,6 +14,7 @@ namespace TelegramAggregator.Tests.Services;
 public class WTelegramClientAdapterTests
 {
     private AppDbContext _dbContext;
+    private IServiceScopeFactory _mockScopeFactory;
     private IImageService _mockImageService;
     private INormalizerService _mockNormalizer;
     private IDeduplicationService _mockDedup;
@@ -29,6 +31,15 @@ public class WTelegramClientAdapterTests
         _mockImageService = Substitute.For<IImageService>();
         _mockNormalizer = Substitute.For<INormalizerService>();
         _mockDedup = Substitute.For<IDeduplicationService>();
+
+        // Mock IServiceScopeFactory
+        _mockScopeFactory = Substitute.For<IServiceScopeFactory>();
+        var mockScope = Substitute.For<IServiceScope>();
+        var mockServiceProvider = Substitute.For<IServiceProvider>();
+        
+        mockServiceProvider.GetService(typeof(AppDbContext)).Returns(_dbContext);
+        mockScope.ServiceProvider.Returns(mockServiceProvider);
+        _mockScopeFactory.CreateScope().Returns(mockScope);
 
         _mockNormalizer
             .NormalizeTextAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -49,7 +60,7 @@ public class WTelegramClientAdapterTests
 
         _adapter = new WTelegramClientAdapter(
             Substitute.For<ILogger<WTelegramClientAdapter>>(),
-            _dbContext,
+            _mockScopeFactory,
             _mockImageService,
             _mockNormalizer,
             _mockDedup);

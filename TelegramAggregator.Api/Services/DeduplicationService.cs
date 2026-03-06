@@ -9,12 +9,12 @@ namespace TelegramAggregator.Api.Services;
 public class DeduplicationService : IDeduplicationService
 {
     private readonly ILogger<DeduplicationService> _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public DeduplicationService(ILogger<DeduplicationService> logger, AppDbContext dbContext)
+    public DeduplicationService(ILogger<DeduplicationService> logger, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
-        _dbContext = dbContext;
+        _scopeFactory = scopeFactory;
     }
 
     public string ComputeFingerprint(string normalizedTextHash, List<string> imageChecksums)
@@ -28,7 +28,11 @@ public class DeduplicationService : IDeduplicationService
     public async Task<bool> IsPostDuplicateAsync(string fingerprint, long channelId, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Checking for duplicate post with fingerprint {Fingerprint} in channel {ChannelId}", fingerprint, channelId);
-        return await _dbContext.Posts.AnyAsync(
+        
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        return await dbContext.Posts.AnyAsync(
             p => p.Fingerprint == fingerprint && p.ChannelId == channelId,
             cancellationToken);
     }

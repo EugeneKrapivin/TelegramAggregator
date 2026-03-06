@@ -17,14 +17,14 @@ public class ImageService : IImageService
 {
     private readonly ILogger<ImageService> _logger;
     private readonly HttpClient _httpClient;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly int _pHashThreshold;
 
-    public ImageService(ILogger<ImageService> logger, AppDbContext dbContext, IOptions<WorkerOptions> workerOptions)
+    public ImageService(ILogger<ImageService> logger, IServiceScopeFactory scopeFactory, IOptions<WorkerOptions> workerOptions)
     {
         _logger = logger;
         _httpClient = new HttpClient();
-        _dbContext = dbContext;
+        _scopeFactory = scopeFactory;
         _pHashThreshold = workerOptions.Value.PHashHammingThreshold;
     }
 
@@ -137,6 +137,9 @@ public class ImageService : IImageService
     {
         _logger.LogDebug("Processing image: {MimeType}, {Width}x{Height}, {Size} bytes", mimeType, width, height, bytes.Length);
 
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
         try
         {
             // Step 1: Compute SHA256 hash for exact-match deduplication
@@ -144,7 +147,7 @@ public class ImageService : IImageService
             _logger.LogDebug("Computed SHA256 hash: {Hash}", checksumSha256);
 
             // Step 2: Check if image already exists by exact SHA256 match
-            var existingImage = await _dbContext.Images
+            var existingImage = await dbContext.Images
                 .FirstOrDefaultAsync(i => i.ChecksumSha256 == checksumSha256, cancellationToken);
 
             if (existingImage != null)
@@ -152,7 +155,7 @@ public class ImageService : IImageService
                 _logger.LogInformation("Found existing image with SHA256: {ImageId}", existingImage.Id);
                 // Update last used timestamp
                 existingImage.UsedAt = DateTime.UtcNow;
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
                 return existingImage.Id;
             }
 
@@ -163,7 +166,7 @@ public class ImageService : IImageService
                 var pHash = await ComputePerceptualHashAsync(bytes, cancellationToken);
                 pHashHex = pHash.ToString("X16");
 
-                var candidates = await _dbContext.Images
+                var candidates = await dbContext.Images
                     .Where(i => i.PerceptualHash != null)
                     .ToListAsync(cancellationToken);
 
@@ -174,7 +177,7 @@ public class ImageService : IImageService
                     {
                         _logger.LogInformation("pHash duplicate found: {ImageId} (Hamming ≤ {Threshold})", candidate.Id, _pHashThreshold);
                         candidate.UsedAt = DateTime.UtcNow;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await dbContext.SaveChangesAsync(cancellationToken);
                         return candidate.Id;
                     }
                 }
@@ -201,8 +204,8 @@ public class ImageService : IImageService
                 UsedAt = DateTime.UtcNow
             };
 
-            _dbContext.Images.Add(newImage);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            dbContext.Images.Add(newImage);
+            await dbContext.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("New image created: {ImageId}", newImage.Id);
 
             return newImage.Id;
@@ -216,7 +219,10 @@ public class ImageService : IImageService
 
     public async Task ClearContentAsync(Guid imageId, CancellationToken cancellationToken = default)
     {
-        var image = await _dbContext.Images.FindAsync([imageId], cancellationToken);
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var image = await dbContext.Images.FindAsync([imageId], cancellationToken);
         if (image is null)
         {
             _logger.LogWarning("Image {ImageId} not found for content clearing", imageId);
@@ -224,14 +230,17 @@ public class ImageService : IImageService
         }
 
         image.Content = null;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Cleared content for image {ImageId}", imageId);
     }
 
     public async Task ClearContentBatchAsync(IEnumerable<Guid> imageIds, CancellationToken cancellationToken = default)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
         var ids = imageIds.ToList();
-        var images = await _dbContext.Images
+        var images = await dbContext.Images
             .Where(i => ids.Contains(i.Id) && i.Content != null)
             .ToListAsync(cancellationToken);
 
@@ -240,7 +249,7 @@ public class ImageService : IImageService
             image.Content = null;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Cleared content for {Count} images", images.Count);
     }
 }

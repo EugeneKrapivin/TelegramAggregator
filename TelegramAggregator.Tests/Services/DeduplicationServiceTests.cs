@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -12,6 +13,7 @@ namespace TelegramAggregator.Tests.Services;
 public class DeduplicationServiceTests
 {
     private AppDbContext _dbContext;
+    private IServiceScopeFactory _mockScopeFactory;
     private DeduplicationService _service;
 
     [SetUp]
@@ -21,7 +23,17 @@ public class DeduplicationServiceTests
             .UseInMemoryDatabase($"DeduplicationTestDb_{Guid.NewGuid()}")
             .Options;
         _dbContext = new AppDbContext(options);
-        _service = new DeduplicationService(Substitute.For<ILogger<DeduplicationService>>(), _dbContext);
+
+        // Mock IServiceScopeFactory
+        _mockScopeFactory = Substitute.For<IServiceScopeFactory>();
+        var mockScope = Substitute.For<IServiceScope>();
+        var mockServiceProvider = Substitute.For<IServiceProvider>();
+        
+        mockServiceProvider.GetService(typeof(AppDbContext)).Returns(_dbContext);
+        mockScope.ServiceProvider.Returns(mockServiceProvider);
+        _mockScopeFactory.CreateScope().Returns(mockScope);
+
+        _service = new DeduplicationService(Substitute.For<ILogger<DeduplicationService>>(), _mockScopeFactory);
     }
 
     [TearDown]

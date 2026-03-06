@@ -11,7 +11,7 @@ namespace TelegramAggregator.Api.Services;
 public class WTelegramClientAdapter
 {
     private readonly ILogger<WTelegramClientAdapter> _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IImageService _imageService;
     private readonly INormalizerService _normalizerService;
     private readonly IDeduplicationService _deduplicationService;
@@ -42,14 +42,14 @@ public class WTelegramClientAdapter
 
     public WTelegramClientAdapter(
         ILogger<WTelegramClientAdapter> logger,
-        AppDbContext dbContext,
+        IServiceScopeFactory scopeFactory,
         IImageService imageService,
         INormalizerService normalizerService,
         IDeduplicationService deduplicationService,
         IOptions<TelegramOptions>? telegramOptions = null)
     {
         _logger = logger;
-        _dbContext = dbContext;
+        _scopeFactory = scopeFactory;
         _imageService = imageService;
         _normalizerService = normalizerService;
         _deduplicationService = deduplicationService;
@@ -137,7 +137,10 @@ public class WTelegramClientAdapter
             return;
         }
 
-        var channel = await _dbContext.Channels
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var channel = await dbContext.Channels
             .FirstOrDefaultAsync(c => 
                 c.TelegramChannelId == peerChannel.channel_id && c.IsActive, 
                 cancellationToken);
@@ -193,17 +196,17 @@ public class WTelegramClientAdapter
             RawJson = System.Text.Json.JsonSerializer.Serialize(new { msg.id, msg.message })
         };
 
-        _dbContext.Posts.Add(post);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.Posts.Add(post);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         foreach (var imageId in imageIds)
         {
-            _dbContext.PostImages.Add(new PostImage { PostId = post.Id, ImageId = imageId });
+            dbContext.PostImages.Add(new PostImage { PostId = post.Id, ImageId = imageId });
         }
 
         if (imageIds.Count > 0)
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         _logger.LogInformation("Ingested post {PostId} from channel {ChannelId}", post.Id, channel.Id);

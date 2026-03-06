@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -19,6 +20,7 @@ public class ImageServiceTests
 {
     private ILogger<ImageService> _mockLogger;
     private AppDbContext _dbContext;
+    private IServiceScopeFactory _mockScopeFactory;
     private ImageService _service;
 
     [SetUp]
@@ -31,7 +33,16 @@ public class ImageServiceTests
             .Options;
         _dbContext = new AppDbContext(options);
 
-        _service = new ImageService(_mockLogger, _dbContext, Options.Create(new WorkerOptions { PHashHammingThreshold = 8 }));
+        // Mock IServiceScopeFactory
+        _mockScopeFactory = Substitute.For<IServiceScopeFactory>();
+        var mockScope = Substitute.For<IServiceScope>();
+        var mockServiceProvider = Substitute.For<IServiceProvider>();
+        
+        mockServiceProvider.GetService(typeof(AppDbContext)).Returns(_dbContext);
+        mockScope.ServiceProvider.Returns(mockServiceProvider);
+        _mockScopeFactory.CreateScope().Returns(mockScope);
+
+        _service = new ImageService(_mockLogger, _mockScopeFactory, Options.Create(new WorkerOptions { PHashHammingThreshold = 8 }));
     }
 
     [TearDown]

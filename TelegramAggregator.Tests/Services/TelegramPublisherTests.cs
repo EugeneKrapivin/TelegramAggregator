@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -18,6 +19,7 @@ public class TelegramPublisherTests
 {
     private AppDbContext _dbContext;
     private ITelegramBotClient _mockBotClient;
+    private IServiceScopeFactory _mockScopeFactory;
     private TelegramPublisher _publisher;
     private const long SummaryChannelId = -1001234567890L;
 
@@ -41,11 +43,20 @@ public class TelegramPublisherTests
             .SendRequest(Arg.Any<SendMediaGroupRequest>(), Arg.Any<CancellationToken>())
             .Returns(new Message[] { mediaMsg });
 
+        // Mock IServiceScopeFactory
+        _mockScopeFactory = Substitute.For<IServiceScopeFactory>();
+        var mockScope = Substitute.For<IServiceScope>();
+        var mockServiceProvider = Substitute.For<IServiceProvider>();
+        
+        mockServiceProvider.GetService(typeof(AppDbContext)).Returns(_dbContext);
+        mockScope.ServiceProvider.Returns(mockServiceProvider);
+        _mockScopeFactory.CreateScope().Returns(mockScope);
+
         _publisher = new TelegramPublisher(
             Substitute.For<ILogger<TelegramPublisher>>(),
             _mockBotClient,
             Options.Create(new WorkerOptions { SummaryChannelId = SummaryChannelId }),
-            _dbContext);
+            _mockScopeFactory);
     }
 
     [TearDown]
