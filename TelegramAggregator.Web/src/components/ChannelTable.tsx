@@ -6,6 +6,7 @@ interface Props {
   onToggleActive: (channel: Channel) => void;
   onEdit: (channel: Channel) => void;
   onDelete: (channel: Channel) => void;
+  onRowClick?: (channel: Channel) => void;
 }
 
 function PencilIcon() {
@@ -24,7 +25,7 @@ function TrashIcon() {
   );
 }
 
-export function ChannelTable({ channels, postCounts, onToggleActive, onEdit, onDelete }: Props) {
+export function ChannelTable({ channels, postCounts, onToggleActive, onEdit, onDelete, onRowClick }: Props) {
   if (channels.length === 0) {
     return (
       <div className="text-center py-16 text-zinc-500">
@@ -47,14 +48,15 @@ export function ChannelTable({ channels, postCounts, onToggleActive, onEdit, onD
           {channels.map(ch => (
             <tr
               key={ch.id}
-              className={`bg-zinc-900 transition-colors hover:bg-zinc-800/40 ${ch.isActive ? '' : 'opacity-40'}`}
+              className={`bg-zinc-900 transition-colors hover:bg-zinc-800/40 cursor-pointer ${ch.isActive ? '' : 'opacity-40'}`}
+              onClick={() => onRowClick?.(ch)}
             >
               <td className="px-4 py-3 font-medium text-zinc-100">{ch.title}</td>
               <td className="px-4 py-3 text-zinc-400 font-['JetBrains_Mono'] text-xs">{ch.username}</td>
               <td className="px-4 py-3 text-zinc-300 font-['JetBrains_Mono'] text-xs tabular-nums">
                 {postCounts[ch.id] ?? '—'}
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => onToggleActive(ch)}
                   className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
@@ -70,7 +72,7 @@ export function ChannelTable({ channels, postCounts, onToggleActive, onEdit, onD
                 {new Date(ch.addedAt).toLocaleDateString()}
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => onEdit(ch)}
                     title="Edit channel"

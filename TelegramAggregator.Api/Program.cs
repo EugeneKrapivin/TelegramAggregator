@@ -99,6 +99,10 @@ channelsGroup.MapGet("/{id}/posts/count", GetChannelPostCount)
 // Telegram Authentication Endpoints
 app.MapTelegramAuthEndpoints();
 
+// Posts & Images Endpoints
+app.MapPostsEndpoints();
+app.MapImagesEndpoints();
+
 await app.RunAsync();
 
 // Channel Endpoint Handlers
