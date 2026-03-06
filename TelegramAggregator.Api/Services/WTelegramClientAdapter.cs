@@ -16,8 +16,29 @@ public class WTelegramClientAdapter
     private readonly INormalizerService _normalizerService;
     private readonly IDeduplicationService _deduplicationService;
     private readonly TelegramOptions _options;
-
     private WTelegram.Client? _client;
+    private bool _loginAttempted;
+
+    // Public accessor for TelegramAuthService to use during login
+    public WTelegram.Client Client
+    {
+        get
+        {
+            if (_client == null)
+            {
+                _client = new WTelegram.Client(Config);
+                _client.OnUpdates += HandleUpdateAsync;
+
+                // Try auto-login from existing session (non-blocking)
+                if (!_loginAttempted)
+                {
+                    _loginAttempted = true;
+                    _ = TryAutoLoginAsync();
+                }
+            }
+            return _client;
+        }
+    }
 
     public WTelegramClientAdapter(
         ILogger<WTelegramClientAdapter> logger,
@@ -35,24 +56,62 @@ public class WTelegramClientAdapter
         _options = telegramOptions?.Value ?? new TelegramOptions();
     }
 
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    private async Task TryAutoLoginAsync()
     {
-        _logger.LogInformation("Connecting to Telegram user account: {Phone}", _options.UserPhoneNumber);
+        try
+        {
+            // If session file exists, this will succeed silently
+            // If not, it will fail and admin must use UI to login
+            var user = await _client!.LoginUserIfNeeded();
+            _logger.LogInformation("Auto-login successful: @{Username} (id={UserId})", user.username, user.id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Auto-login failed - manual login required via /settings/telegram-login");
+        }
+    }
 
-        _client = new WTelegram.Client(what => what switch
+    private string? Config(string what)
+    {
+        return what switch
         {
             "api_id" => _options.ApiId,
             "api_hash" => _options.ApiHash,
             "phone_number" => _options.UserPhoneNumber,
-            "session_pathname" => _options.SessionPath,
-            "password" => "Thisismyworld1!",
+            "session_pathname" => Path.Combine("data", "wtelegram.session"),
+            "verification_code" => null,  // Will be provided via UI
+            "password" => null,           // Will be provided via UI
             _ => null
-        });
+        };
+    }
 
-        _client.OnUpdates += HandleUpdateAsync;
+    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Connecting to Telegram user account: {Phone}", _options.UserPhoneNumber);
+
+        // Use the Client property to initialize
+        _ = Client;
         
-        var user = await _client.LoginUserIfNeeded();
-        _logger.LogInformation("Connected as @{Username} (id={UserId})", user.username, user.id);
+        // Wait for auto-login or manual login to complete
+        var timeout = Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+        var loginCheck = Task.Run(async () =>
+        {
+            while (_client?.User == null && !cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(100, cancellationToken);
+            }
+        }, cancellationToken);
+
+        await Task.WhenAny(loginCheck, timeout);
+
+        if (_client?.User != null)
+        {
+            _logger.LogInformation("Connected as @{Username} (id={UserId})", _client.User.username, _client.User.id);
+        }
+        else
+        {
+            _logger.LogWarning("Telegram client initialized but not logged in yet. Use /settings/telegram-login to authenticate.");
+        }
     }
 
     private async Task HandleUpdateAsync(IObject update)

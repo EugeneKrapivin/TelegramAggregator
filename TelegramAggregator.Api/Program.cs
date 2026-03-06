@@ -7,6 +7,7 @@ using TelegramAggregator.Api.Config;
 using TelegramAggregator.Api.Services;
 using TelegramAggregator.Api.AI;
 using TelegramAggregator.Api.Background;
+using TelegramAggregator.Api.Endpoints;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,9 @@ builder.Services.AddSingleton<ISemanticSummarizer, SemanticKernelSummarizer>();
 builder.Services.AddSingleton<INormalizerService, NormalizerService>();
 builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 builder.Services.AddSingleton<WTelegramClientAdapter>();
+
+// Register Telegram authentication service
+builder.Services.AddSingleton<TelegramAuthService>();
 
 // Register background workers
 builder.Services.AddHostedService<SummaryBackgroundService>();
@@ -91,6 +95,9 @@ channelsGroup.MapGet("/{id}/posts/count", GetChannelPostCount)
     .WithName("GetChannelPostCount")
     .WithSummary("Get post count for channel")
     .WithDescription("Returns the total number of posts ingested for the channel.");
+
+// Telegram Authentication Endpoints
+app.MapTelegramAuthEndpoints();
 
 await app.RunAsync();
 

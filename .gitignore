@@ -409,6 +409,11 @@ MigrationBackup/
 # Claude Code local config (machine-specific, may contain secrets)
 .claude/
 
+# Telegram session files (contain authentication keys)
+data/wtelegram.session
+data/*.session
+*.session
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
