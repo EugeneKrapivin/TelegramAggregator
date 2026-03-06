@@ -23,7 +23,7 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
   });
 
   const loadMore = useCallback(async () => {
-    if (!channelId || loading) return;
+    if (!channelId || loading || !hasMore) return;
 
     setLoading(true);
     setError(null);
@@ -38,7 +38,7 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
     } finally {
       setLoading(false);
     }
-  }, [channelId, page, loading]);
+  }, [channelId, page, loading, hasMore]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
@@ -48,13 +48,27 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
 
   // Reset state when channel changes
   useEffect(() => {
-    if (channelId === null) return;
+    if (channelId === null) {
+      // Clear posts when panel closes
+      setPosts([]);
+      setPage(1);
+      setHasMore(true);
+      setError(null);
+      return;
+    }
 
+    // Reset and load when channel opens/changes
     setPosts([]);
     setPage(1);
     setHasMore(true);
     setError(null);
-    loadMore();
+    
+    // Use setTimeout to ensure state is cleared before loading
+    const timeoutId = setTimeout(() => {
+      loadMore();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [channelId]);
 
   // ESC key handler
