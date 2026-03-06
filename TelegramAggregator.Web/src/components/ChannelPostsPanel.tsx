@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getChannelPosts, type PostListDto } from '../api/posts';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
@@ -16,6 +16,7 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isInitialLoad = useRef(false);
 
   const panelRef = useClickOutside<HTMLDivElement>({
     onClickOutside: onClose,
@@ -49,27 +50,30 @@ export function ChannelPostsPanel({ channelId, channelName, onClose }: ChannelPo
   // Reset state when channel changes
   useEffect(() => {
     if (channelId === null) {
-      // Clear posts when panel closes
+      // Clear everything when panel closes
       setPosts([]);
       setPage(1);
       setHasMore(true);
       setError(null);
+      isInitialLoad.current = false;
       return;
     }
 
-    // Reset and load when channel opens/changes
+    // Reset for new channel
     setPosts([]);
     setPage(1);
     setHasMore(true);
     setError(null);
-    
-    // Use setTimeout to ensure state is cleared before loading
-    const timeoutId = setTimeout(() => {
-      loadMore();
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
+    isInitialLoad.current = true;
   }, [channelId]);
+
+  // Initial load - separate effect to avoid double-loading
+  useEffect(() => {
+    if (isInitialLoad.current && posts.length === 0 && !loading && channelId !== null) {
+      isInitialLoad.current = false;
+      loadMore();
+    }
+  }, [posts.length, loading, channelId, loadMore]);
 
   // ESC key handler
   useEffect(() => {
