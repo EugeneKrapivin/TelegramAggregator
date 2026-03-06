@@ -28,13 +28,6 @@ public class WTelegramClientAdapter
             {
                 _client = new WTelegram.Client(Config);
                 _client.OnUpdates += HandleUpdateAsync;
-
-                // Try auto-login from existing session (non-blocking)
-                if (!_loginAttempted)
-                {
-                    _loginAttempted = true;
-                    _ = TryAutoLoginAsync();
-                }
             }
             return _client;
         }
@@ -60,9 +53,16 @@ public class WTelegramClientAdapter
     {
         try
         {
-            // If session file exists, this will succeed silently
-            // If not, it will fail and admin must use UI to login
-            var user = await _client!.LoginUserIfNeeded();
+            // Check if session file exists before attempting login
+            var sessionPath = Path.Combine("data", "wtelegram.session");
+            if (!File.Exists(sessionPath))
+            {
+                _logger.LogInformation("No session file found - manual login required via /settings/telegram-login");
+                return;
+            }
+
+            // If session file exists, try to auto-login
+            var user = await Client.LoginUserIfNeeded();
             _logger.LogInformation("Auto-login successful: @{Username} (id={UserId})", user.username, user.id);
         }
         catch (Exception ex)
@@ -87,30 +87,32 @@ public class WTelegramClientAdapter
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Connecting to Telegram user account: {Phone}", _options.UserPhoneNumber);
+        _logger.LogInformation("Initializing Telegram client connection");
 
-        // Use the Client property to initialize
+        // Initialize client but don't trigger auto-login yet
         _ = Client;
-        
-        // Wait for auto-login or manual login to complete
-        var timeout = Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-        var loginCheck = Task.Run(async () =>
-        {
-            while (_client?.User == null && !cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(100, cancellationToken);
-            }
-        }, cancellationToken);
 
-        await Task.WhenAny(loginCheck, timeout);
-
-        if (_client?.User != null)
+        // Only attempt auto-login if session file exists
+        var sessionPath = Path.Combine("data", "wtelegram.session");
+        if (!File.Exists(sessionPath))
         {
-            _logger.LogInformation("Connected as @{Username} (id={UserId})", _client.User.username, _client.User.id);
+            _logger.LogInformation("No Telegram session found. Please login via /settings/telegram-login");
+            return;
+        }
+
+        if (!_loginAttempted)
+        {
+            _loginAttempted = true;
+            await TryAutoLoginAsync();
+        }
+
+        if (Client.User != null)
+        {
+            _logger.LogInformation("Connected as @{Username} (id={UserId})", Client.User.username, Client.User.id);
         }
         else
         {
-            _logger.LogWarning("Telegram client initialized but not logged in yet. Use /settings/telegram-login to authenticate.");
+            _logger.LogWarning("Telegram client initialized but not logged in. Use /settings/telegram-login to authenticate.");
         }
     }
 

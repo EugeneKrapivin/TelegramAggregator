@@ -5,7 +5,7 @@ public class WorkerOptions
     /// <summary>
     /// Interval for generating and posting summaries. Default is 10 minutes.
     /// </summary>
-    public TimeSpan SummaryInterval { get; set; } = TimeSpan.FromMinutes(10);
+    public TimeSpan SummaryInterval { get; set; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Interval for running the image cleanup job. Default is 1 hour.
@@ -15,7 +15,7 @@ public class WorkerOptions
     /// <summary>
     /// Channel ID where summaries will be posted. Required.
     /// </summary>
-    public long SummaryChannelId { get; set; }
+    public long SummaryChannelId { get; set; } = 3814174631;
 
     /// <summary>
     /// Duration for which images are retained before being cleaned up. Default is 7 days.
