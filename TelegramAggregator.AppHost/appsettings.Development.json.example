@@ -1,0 +1,17 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Parameters": {
+    "telegram-bot-token": "YOUR_BOT_TOKEN_FROM_BOTFATHER",
+    "telegram-api-id": "YOUR_API_ID_FROM_MY_TELEGRAM_ORG",
+    "telegram-api-hash": "YOUR_API_HASH_FROM_MY_TELEGRAM_ORG",
+    "telegram-user-phone-number": "+1234567890",
+    "azure-openai-endpoint": "https://YOUR_AZURE_OPENAI.openai.azure.com/",
+    "azure-openai-api-key": "YOUR_AZURE_OPENAI_API_KEY",
+    "worker-summary-channel-id": "-1001234567890"
+  }
+}
