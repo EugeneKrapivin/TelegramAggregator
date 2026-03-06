@@ -3,6 +3,7 @@ import type { Channel, CreateChannelRequest } from '../api';
 import { getChannels, createChannel, updateChannel, deleteChannel, getPostCount } from '../api';
 import { ChannelTable } from '../components/ChannelTable';
 import { ChannelModal } from '../components/ChannelModal';
+import { ChannelPostsPanel } from '../components/ChannelPostsPanel';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -12,6 +13,7 @@ export default function ChannelsPage() {
   const [modalChannel, setModalChannel] = useState<Channel | null | undefined>(undefined);
   // undefined = closed, null = create mode, Channel = edit mode
   const [deleteTarget, setDeleteTarget] = useState<Channel | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
 
   const loadChannels = useCallback(async () => {
     try {
@@ -105,9 +107,16 @@ export default function ChannelsPage() {
             onToggleActive={handleToggleActive}
             onEdit={ch => setModalChannel(ch)}
             onDelete={ch => setDeleteTarget(ch)}
+            onRowClick={ch => setSelectedChannel(ch)}
           />
         )}
       </main>
+
+      <ChannelPostsPanel
+        channelId={selectedChannel?.id ?? null}
+        channelName={selectedChannel?.title || selectedChannel?.username || ''}
+        onClose={() => setSelectedChannel(null)}
+      />
 
       {modalChannel !== undefined && (
         <ChannelModal
