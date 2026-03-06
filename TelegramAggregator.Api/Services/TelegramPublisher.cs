@@ -35,23 +35,42 @@ public class TelegramPublisher : ITelegramPublisher
         List<string> sourceChannels,
         CancellationToken cancellationToken = default)
     {
+        // Validate channel ID is configured
+        if (_summaryChannelId == 0)
+        {
+            _logger.LogWarning("SummaryChannelId not configured - skipping publish. Set Worker:SummaryChannelId in configuration.");
+            return 0;
+        }
+
         var text = $"*{headline}*\n\n{digest}\n\n_{string.Join(", ", sourceChannels)}_";
         var chatId = new ChatId(_summaryChannelId);
 
-        var media = await BuildMediaListAsync(imageIds, text, cancellationToken);
-
-        if (media.Count > 0)
+        try
         {
-            _logger.LogInformation("Publishing summary with {Count} images to channel {ChannelId}", media.Count, _summaryChannelId);
-            var messages = await _botClient.SendMediaGroup(chatId, media, cancellationToken: cancellationToken);
-            
-            return messages[0].MessageId;
-        }
+            var media = await BuildMediaListAsync(imageIds, text, cancellationToken);
 
-        _logger.LogInformation("Publishing text-only summary to channel {ChannelId}", _summaryChannelId);
-        var message = await _botClient.SendMessage(chatId, text, parseMode: ParseMode.Markdown, cancellationToken: cancellationToken);
-        
-        return message.MessageId;
+            if (media.Count > 0)
+            {
+                _logger.LogInformation("Publishing summary with {Count} images to channel {ChannelId}", media.Count, _summaryChannelId);
+                var messages = await _botClient.SendMediaGroup(chatId, media, cancellationToken: cancellationToken);
+                
+                return messages[0].MessageId;
+            }
+
+            _logger.LogInformation("Publishing text-only summary to channel {ChannelId}", _summaryChannelId);
+            var message = await _botClient.SendMessage(chatId, text, parseMode: ParseMode.Markdown, cancellationToken: cancellationToken);
+            
+            return message.MessageId;
+        }
+        catch (Telegram.Bot.Exceptions.ApiRequestException ex) when (ex.Message.Contains("chat not found"))
+        {
+            _logger.LogError(
+                "Failed to publish summary: Bot cannot access channel {ChannelId}. " +
+                "Make sure: 1) Channel ID is correct (use negative number for channels/supergroups, e.g. -1001234567890), " +
+                "2) Bot is added as admin to the channel, 3) Bot token is valid. Error: {Error}",
+                _summaryChannelId, ex.Message);
+            throw;
+        }
     }
 
     private async Task<List<IAlbumInputMedia>> BuildMediaListAsync(
